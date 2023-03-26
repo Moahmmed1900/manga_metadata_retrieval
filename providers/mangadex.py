@@ -40,6 +40,7 @@ class MangaDex(Provider):
             id_token=self.id_token,
             titles=MangaDex.__extract_titles_from_response(manga_info),
             tags=MangaDex.__extract_tags_from_response(manga_info),
+            genres=MangaDex.__extract_genres_from_response(manga_info),
             summary=MangaDex.__extract_summary_from_response(manga_info),
             cover_art=cover_art
         )
@@ -63,7 +64,7 @@ class MangaDex(Provider):
         return [manga["id"] for manga in api_response.json()["data"]]
         
     @staticmethod
-    def get_titles(id_token: str) -> list[str]:
+    def get_titles(id_token: str) -> list[dict]:
         manga_info = MangaDex.__get_manga_info(id_token)
         
         return MangaDex.__extract_titles_from_response(manga_info)
@@ -73,6 +74,12 @@ class MangaDex(Provider):
         manga_info = MangaDex.__get_manga_info(id_token)
         
         return MangaDex.__extract_tags_from_response(manga_info)
+    
+    @staticmethod
+    def get_genres(id_token: str) -> list[str]:
+        manga_info = MangaDex.__get_manga_info(id_token)
+        
+        return MangaDex.__extract_genres_from_response(manga_info)
 
     @staticmethod
     def get_summary(id_token: str) -> str:
@@ -94,7 +101,7 @@ class MangaDex(Provider):
         if(api_response.status_code != 200):
             raise ProviderExceptions("Invalid cover URL. {https://uploads.mangadex.org/covers/{id_token}/{filename}")
 
-        return Image.open(StringIO(api_response.content))
+        return Image.open(BytesIO(api_response.content))
     
     @staticmethod
     def __get_manga_info(id_token) -> dict:
@@ -108,30 +115,51 @@ class MangaDex(Provider):
         return api_response.json()
     
     @staticmethod
-    def __extract_titles_from_response(response:dict) -> list[str]:
-        titles_list = []
+    def __extract_titles_from_response(response:dict) -> list[dict]:
+        titles_dict = {}
 
         try:
-            titles_list.append(response["data"]["attributes"]["title"]["en"])
+            titles_dict["main"] = response["data"]["attributes"]["title"]["en"]
 
+            titles_dict["alt_titles"] = []
             for title in response["data"]["attributes"]["altTitles"]:
-                if(title.get("en")):
-                    titles_list.append(title["en"])
+                titles_dict["alt_titles"].append(title)
 
-            return titles_list
+            return titles_dict
         
         except Exception as e:
             raise ProviderExceptions(f"Could not extract titles from response. ({e})", MangaDex.PROVIDER_NAME)
         
     @staticmethod
     def __extract_tags_from_response(response:dict) -> list[str]:
+        """Extract tags that are considered "format" and "theme" in mangaDex.
+        """
         tags_list = []
 
         try:
             tags_dict = response["data"]["attributes"]["tags"]
 
             for tag in tags_dict:
-                tags_list.append(tag["attributes"]["name"]["en"])
+                if(tag["attributes"]["group"] == "format" or tag["attributes"]["group"] == "theme"):
+                    tags_list.append(tag["attributes"]["name"]["en"])
+
+            return tags_list
+        
+        except Exception as e:
+            raise ProviderExceptions(f"Could not extract tags from response. ({e})", MangaDex.PROVIDER_NAME)
+        
+    @staticmethod
+    def __extract_genres_from_response(response:dict) -> list[str]:
+        """Extract tags that are considered "genre" in mangaDex.
+        """
+        tags_list = []
+
+        try:
+            tags_dict = response["data"]["attributes"]["tags"]
+
+            for tag in tags_dict:
+                if(tag["attributes"]["group"] == "genre"):
+                    tags_list.append(tag["attributes"]["name"]["en"])
 
             return tags_list
         

@@ -23,9 +23,10 @@ class Provider(ABC):
     
     @staticmethod
     @abstractmethod
-    def get_titles(self, id_token:str) -> list[str]:
+    def get_titles(self, id_token:str) -> list[dict]:
         """Get all titles of the specified manga.
-        Where title[0] is the main one and should always be available. Others are considered alt titles and optional.
+        Where title["main"] is the main one and should always be available. Others are considered alt titles and optional.
+        Alt titles are available in title["alt_titles"] as list of dicts as {"lable": "title"}.
         Raise ProviderExceptions.MangaNotFoundError if there is no matched manga or multiple mangas.
 
         Args:
@@ -48,6 +49,21 @@ class Provider(ABC):
 
         Returns:
             list[str]: List of tags for the specified manga.
+        """
+
+        pass
+
+    @staticmethod 
+    @abstractmethod
+    def get_genres(self, id_token:str) -> list[str]:
+        """Get genres of the specified manga.
+        Raise ProviderExceptions.MangaNotFoundError if there is no matched manga or multiple mangas.
+
+        Args:
+            id_token (str): Used to uniquely identify the manga on the provider site.
+
+        Returns:
+            list[str]: List of genres for the specified manga.
         """
 
         pass
