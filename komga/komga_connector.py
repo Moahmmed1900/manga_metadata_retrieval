@@ -76,15 +76,15 @@ class KomgaConnector():
             img_file = BytesIO()
 
             #Checking file size, thumbnails must not exceed 1MB.
-            metadata.cover_art.save(img_file, 'png', optimize = True)
+            metadata.cover_art.save(img_file, 'JPEG', optimize = True)
 
-            if(img_file.tell() > 1000000):
-                #It exceed 1MB. Hence, compress incrementally until it is less than 1 MB.
-                for compress_level in range(20):
+            if(img_file.tell() > 900000):
+                #It exceed 1MB approx. . Hence, compress incrementally until it is less than 1 MB.
+                for quality  in reversed(range(100)):
                     img_file = BytesIO()
-                    metadata.cover_art.save(img_file, 'png', optimize = True, compress_level=compress_level)
+                    metadata.cover_art.save(img_file, 'JPEG', optimize = True, quality=quality)
 
-                    if(img_file.tell() < 1000000):
+                    if(img_file.tell() < 900000):
                         break
 
             api_response = self.current_session.post(
@@ -119,3 +119,12 @@ class KomgaConnector():
             return response
         
         raise KomgaExceptions(f"Invalid response from Komga. {response.status_code}, message: {response.json()}")
+    
+    def __del__(self):
+        api_response = self.current_session.get(
+            url=f"{KomgaConnector.KOMGA_BASE_URL}/api/v1/users/logout"
+        )
+
+        if(api_response.status_code != 204):
+            #Login failed; could not view API's user information.
+            raise KomgaLoginFailed("Could not logout from session.")
