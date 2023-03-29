@@ -14,4 +14,6 @@ It also can connect to Komga server for updating metadata.
  - Cover Art.
 
 # How to use?
-You can look at jupter notebooks for examples.
+ - Set komga server information in "komga/config.py".
+ - You can look at jupter notebooks for exmaples.
+
