@@ -2,7 +2,7 @@
 Retrieve metadata and cover art for manga and webtoons.
 It also can connect to Komga server for updating metadata.
 
-# Avalible providers:
+# Available providers:
  - MangaDex.
  - MangaUpdates.
  
@@ -15,5 +15,5 @@ It also can connect to Komga server for updating metadata.
 
 # How to use?
  - Set komga server information in "komga/config.py".
- - You can look at jupter notebooks for exmaples.
+ - You can look at jupter notebooks for examples.
 
