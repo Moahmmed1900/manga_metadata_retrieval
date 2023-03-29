@@ -33,7 +33,7 @@ class MangaDex(Provider):
             f"https://uploads.mangadex.org/covers/{self.id_token}/{filename}"
         )
 
-        cover_art = Image.open(BytesIO(api_response.content))
+        cover_art = Image.open(BytesIO(api_response.content)).convert("RGB")
 
         return MangaMetadata(
             provider=MangaDex.PROVIDER_NAME,
@@ -50,7 +50,9 @@ class MangaDex(Provider):
         try:
             api_response:Response = requests.get(
                 f"{MangaDex.BASE_URL}/manga",
-                params={"title": name}
+                params={"title": name,
+                        "order[relevance]":"desc"
+                    }
             )
 
         except Exception as e:
@@ -101,7 +103,7 @@ class MangaDex(Provider):
         if(api_response.status_code != 200):
             raise ProviderExceptions("Invalid cover URL. {https://uploads.mangadex.org/covers/{id_token}/{filename}")
 
-        return Image.open(BytesIO(api_response.content))
+        return Image.open(BytesIO(api_response.content)).convert("RGB")
     
     @staticmethod
     def __get_manga_info(id_token) -> dict:

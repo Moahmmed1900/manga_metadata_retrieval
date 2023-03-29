@@ -73,25 +73,13 @@ class KomgaConnector():
 
         if(update_cover_art):
             # Now updating the cover.
-            img_file = BytesIO()
-
-            #Checking file size, thumbnails must not exceed 1MB.
-            metadata.cover_art.save(img_file, 'JPEG', optimize = True)
-
-            if(img_file.tell() > 900000):
-                #It exceed 1MB approx. . Hence, compress incrementally until it is less than 1 MB.
-                for quality  in reversed(range(100)):
-                    img_file = BytesIO()
-                    metadata.cover_art.save(img_file, 'JPEG', optimize = True, quality=quality)
-
-                    if(img_file.tell() < 900000):
-                        break
+            ready_to_upload_image = KomgaConnector.__validate_cover(metadata)
 
             api_response = self.current_session.post(
                 url=f"{KomgaConnector.KOMGA_BASE_URL}/api/v1/series/{series_id}/thumbnails",
                 params={"selected": True},
                 files={
-                    "file": img_file.getvalue()
+                    "file": ready_to_upload_image.getvalue()
                 }
             )
 
@@ -119,6 +107,24 @@ class KomgaConnector():
             return response
         
         raise KomgaExceptions(f"Invalid response from Komga. {response.status_code}, message: {response.json()}")
+    
+    @staticmethod
+    def __validate_cover(metadata: MangaMetadata) -> BytesIO:
+            img_file = BytesIO()
+
+            #Checking file size, thumbnails must not exceed 1MB.
+            metadata.cover_art.save(img_file, 'JPEG', optimize = True)
+
+            if(img_file.tell() > 900000):
+                #It exceed 1MB approx. . Hence, compress incrementally until it is less than 1 MB.
+                for quality in reversed(range(100)):
+                    img_file = BytesIO()
+                    metadata.cover_art.save(img_file, 'JPEG', optimize = True, quality=quality)
+
+                    if(img_file.tell() < 900000):
+                        break
+                
+            return img_file
     
     def __del__(self):
         api_response = self.current_session.get(
