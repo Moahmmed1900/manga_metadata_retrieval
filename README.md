@@ -13,4 +13,5 @@ It also can connect to Komga server for updating metadata.
  - Summary.
  - Cover Art.
 
-
+# How to use?
+You can look at jupter notebooks for examples.
